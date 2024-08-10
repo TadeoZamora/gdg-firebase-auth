@@ -3,26 +3,35 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { FirebaseAdmin } from "src/config/firebase.setup";
 import { TblUsers } from "src/Entities/users.entity";
 import { Repository } from "typeorm";
+import { AuthenticationService } from "./authMiddleware.service";
 
 @Injectable()
 export class UsersService {
-    constructor(private readonly admin: FirebaseAdmin, @InjectRepository(TblUsers) private tblUsers: Repository<TblUsers>) {}
+    company = null;
+    constructor(private readonly admin: FirebaseAdmin, @InjectRepository(TblUsers) private tblUsers: Repository<TblUsers>, private authService: AuthenticationService) {
+        this.company = authService.getCompany();
+    }
 
     async create(email: string, password: string, name: string, role: string) {
         try {
             const firebaseAuth = this.admin.setup();
+            //se agrega usuario directamente en firebase
             const new_user = await firebaseAuth.auth().createUser({
                 email,
                 password,
             });
+            //si el registro en Firebase es exitoso, procedemos a agregar el usuario a nuestra BD!
             const user = await this.tblUsers.save({
                 uid: new_user.uid,
                 name,
                 role,
             });
             if (user !== null) {
+                //definicion de claims:
+                //metadata, datos adicionales de un usuario que se requieran en el front-end
                 await firebaseAuth.auth().setCustomUserClaims(new_user.uid, {
                     role: user.role,
+                    company: this.company,
                 });
                 return user;
             }

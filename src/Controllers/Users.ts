@@ -1,6 +1,7 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, UseGuards } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { UserLoginParams, UserLoginParamsDto, UserResponseDto } from "src/Models/user";
+import { AuthGuard } from "src/Services/auth.guard";
 import { UsersService } from "src/Services/users.service";
 
 @Controller("usuarios")
@@ -16,12 +17,15 @@ export class UsersController {
         return await this.userService.create(params.email, params.password, params.name, params.role);
     }
 
+    @UseGuards(AuthGuard)
     @ApiOperation({ summary: "Endpoint para obtener lista" })
     @ApiResponse({ type: [UserResponseDto] })
     @Get("lista/:role?")
     async list(@Param("role") role?: string) {
         return await this.userService.list(role);
     }
+
+    @UseGuards(AuthGuard)
     @ApiOperation({ summary: "Endpoint para obtener detalle de un usuario" })
     @ApiResponse({ type: UserResponseDto })
     @Get("detalles/:uid")
