@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, UseGuards } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { Auth } from "src/config/auth.decorator";
 import { UserLoginParams, UserLoginParamsDto, UserResponseDto } from "src/Models/user";
 import { AuthGuard } from "src/Services/auth.guard";
 import { UsersService } from "src/Services/users.service";
@@ -17,7 +18,7 @@ export class UsersController {
         return await this.userService.create(params.email, params.password, params.name, params.role);
     }
 
-    @UseGuards(AuthGuard)
+    @Auth("Admin")
     @ApiOperation({ summary: "Endpoint para obtener lista" })
     @ApiResponse({ type: [UserResponseDto] })
     @Get("lista/:role?")
